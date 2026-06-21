@@ -111,4 +111,107 @@ router.get('/available', async (req, res) => {
   successResponse(res, { data: result });
 });
 
+router.post('/buy', async (req, res) => {
+  const { productId, customerName, customerEmail, customerPhone, quantity = 1 } = req.body;
+
+  // 1. Find available pins
+  const pins = await Pin.find({
+    product: productId,
+    status: 'AVAILABLE',
+  }).limit(quantity);
+
+  if (!pins.length || pins.length < quantity) {
+    throw new BadRequestError('Insufficient checker stock');
+  }
+
+  // 2. Create order (you must have Order model)
+  const order = await Order.create({
+    product: productId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    status: 'PENDING',
+  });
+
+  // 3. Assign pins to order
+  const pinIds = pins.map(p => p._id);
+
+  await Pin.updateMany(
+    { _id: { $in: pinIds } },
+    {
+      $set: {
+        status: 'SOLD',
+        order: order._id,
+        soldAt: new Date(),
+      },
+    }
+  );
+
+  // 4. Update order with delivered pins
+  order.status = 'COMPLETED';
+  order.pins = pins.map(p => ({
+    pin: p.pin,
+    serial: p.serial,
+  }));
+
+  await order.save();
+
+  // 5. Return response
+  return successResponse(res, {
+    message: 'Checker purchased successfully',
+    data: {
+      orderNumber: order._id,
+      pins: order.pins,
+    },
+  });
+});
+
+router.post('/validate', async (req, res) => {
+  const { serial, pin } = req.body;
+
+  const record = await Pin.findOne({ serial, pin })
+    .populate('product');
+
+  if (!record) {
+    throw new BadRequestError('Invalid checker card');
+  }
+
+  return successResponse(res, {
+    data: {
+      valid: true,
+      product: record.product.name,
+      status: record.status,
+      soldAt: record.soldAt,
+    },
+  });
+});
+
+router.get('/retrieve/:orderNumber', async (req, res) => {
+  const { orderNumber } = req.params;
+
+  const order = await Order.findById(orderNumber).populate('product');
+
+  if (!order) {
+    throw new NotFoundError('Order not found');
+  }
+
+  const pins = await Pin.find({ order: order._id });
+
+  return successResponse(res, {
+    data: {
+      orderNumber: order._id,
+      customer: {
+        name: order.customerName,
+        email: order.customerEmail,
+        phone: order.customerPhone,
+      },
+      product: order.product.name,
+      pins: pins.map(p => ({
+        pin: p.pin,
+        serial: p.serial,
+      })),
+    },
+  });
+});
+
 module.exports = router;

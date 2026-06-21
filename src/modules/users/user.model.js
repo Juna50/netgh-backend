@@ -1,36 +1,40 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
-      required: [true, 'Full name is required'],
+      required: [true, "Full name is required"],
       trim: true,
-      maxlength: [100, 'Name must be under 100 characters'],
+      maxlength: [100, "Name must be under 100 characters"],
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+    },
+    wallet: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wallet",
     },
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
+      required: [true, "Phone number is required"],
       trim: true,
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters'],
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters"],
       select: false,
     },
     role: {
       type: String,
-      enum: ['ADMIN', 'AGENT'],
+      enum: ["ADMIN", "AGENT"],
       required: true,
     },
     isActive: {
@@ -50,12 +54,12 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
@@ -72,4 +76,4 @@ userSchema.methods.toJSON = function () {
   return obj;
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

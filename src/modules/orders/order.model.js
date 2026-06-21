@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
@@ -10,8 +10,8 @@ const orderSchema = new mongoose.Schema(
     },
     product: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
-      required: true,
+      ref: "Product",
+      default: null,
     },
     // Snapshot of product at time of order
     productSnapshot: {
@@ -21,7 +21,6 @@ const orderSchema = new mongoose.Schema(
       providerProductCode: String,
     },
     // Who placed the order
-    customerName: { type: String, required: true, trim: true },
     customerEmail: { type: String, required: true, lowercase: true },
     customerPhone: { type: String, required: true },
     // The phone/account to deliver to
@@ -29,7 +28,7 @@ const orderSchema = new mongoose.Schema(
     // If placed by an agent
     agent: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       default: null,
     },
     amount: {
@@ -44,14 +43,14 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'],
-      default: 'PENDING',
+      enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+      default: "PENDING",
       index: true,
     },
     fulfillmentStatus: {
       type: String,
-      enum: ['PENDING', 'QUEUED', 'PROCESSING', 'SUCCESS', 'FAILED'],
-      default: 'PENDING',
+      enum: ["PENDING", "QUEUED", "PROCESSING", "SUCCESS", "FAILED"],
+      default: "PENDING",
       index: true,
     },
     // Paystack
@@ -68,11 +67,23 @@ const orderSchema = new mongoose.Schema(
     retryCount: { type: Number, default: 0 },
     // Fulfilled at timestamp
     fulfilledAt: { type: Date },
+    serviceType: {
+      type: String,
+      required: false,
+    },
+    serviceLabel: {
+      type: String,
+      required: false,
+    },
+    category: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
-  }
+  },
 );
 
 // Compound indexes for common queries
@@ -81,4 +92,4 @@ orderSchema.index({ agent: 1, createdAt: -1 });
 orderSchema.index({ customerEmail: 1 });
 orderSchema.index({ paymentStatus: 1, fulfillmentStatus: 1 });
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model("Order", orderSchema);

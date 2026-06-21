@@ -23,6 +23,10 @@ const esimRoutes = require('./modules/esim/esim.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const settingsRoutes = require('./modules/settings/settings.routes');
 const agentRoutes = require('./modules/users/agent.routes');
+const walletRoutes = require('./modules/wallet/wallet.routes');
+const adminWalletRoutes = require('./modules/wallet/wallet.admin.routes');
+const afaRoutes = require('./modules/afa/afa.routes');
+
 
 const app = express();
 
@@ -96,6 +100,11 @@ app.use(`${API}/esim`, esimRoutes);
 app.use(`${API}/dashboard`, dashboardRoutes);
 app.use(`${API}/settings`, settingsRoutes);
 app.use(`${API}/agent`, agentRoutes);
+app.use(`${API}/wallet`, walletRoutes);
+app.use(`${API}/admin/wallets`, adminWalletRoutes);
+app.use(`${API}/afa`, afaRoutes);
+
+
 
 // ─── Error Handling ────────────────────────────────────────────────────────────
 app.use(notFound);
